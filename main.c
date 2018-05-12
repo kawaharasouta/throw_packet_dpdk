@@ -9,19 +9,36 @@
 */
 #include<netinet/in.h>
 
-#include"initrawsock.h"
-#include"mk_ether.h"
+//#include"include/mk_ether.h"
 
-#include"knet/ethernet.h"
-#include"knet/arp.h"
-#include"knet/ip.h"
-#include"knet/tcp.h"
+#include"include/knet/ethernet.h"
+//#include"include/knet/arp.h"
+#include"include/knet/ip.h"
+//#include"include/knet/tcp.h"
+
+#include"include/dpdk.h"
+#include"include/dpdk_init.h"
+
 /*
 struct ip_packet {
 	struct ether_header eth_hdr;
 	struct ip ip_hdr; 
 };
 */
+
+void mk_ether(struct eth_hdr *hdr, u_int8_t *d_addr, u_int8_t *s_addr){
+  printf("mk_ether head \n");
+
+  strncpy(hdr->ether_dest_addr, d_addr, 6); 
+  strncpy(hdr->ether_src_addr, s_addr, 6); 
+  //hdr->ether_dest_addr
+  printf("strncpy fin\n");
+  hdr->type = ntohs(0x0800);
+  //hdr->type1 = 0x08;
+  //hdr->type2 = 0x00;
+
+  printf("mk_ether fin\n");
+}
 
 #if 1
 //u_int16_t packet[1000] = {
@@ -63,20 +80,17 @@ u_char packet[64] = {
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, //2
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
-//
-//
-//u_int16_t arp_packet[100] = {
-//	0xffff, 0xffff, 0xffff, 0xdeb4,
-//	0x6b16, 0x904c, 0x0806, 
-//};
 
 struct test_packet {
-	struct ether_hdr ethhdr;
+	struct eth_hdr ethhdr;
 	struct ip_hdr iphdr;
 	u_char pate[26];
 } __attribute__ ((packed));
 
 int main(int argc, char **argv){
+	dpdk_init(argc, argv);
+
+
 	int sock, size;//, sock_eth3, sock_eth2;
 	u_char buf[2048];
 	u_int8_t s_addr[6] = {
@@ -86,24 +100,19 @@ int main(int argc, char **argv){
 		0xa0, 0x36, 0x9f, 0x3f, 0x62, 0x02
 	};
 
-	if (argc < 2){ 
-    fprintf(stderr, "usage: ./main [dev-name]\n");
-    exit(1);
-  }
-
-	printf("initrawsock\n");
-  if ((sock = initrawsock(argv[1], 1, 0)) < 0){ 
-  //if ((sock_eth3 = initrawsock("eth3", 1, 0)) < 0){ 
-    fprintf(stderr, "InitRawSocket:error:%s\n", argv[1]);
-    //fprintf(stderr, "InitRawSocket:error:eth3\n");
-    exit(1);
-  }
-	printf("initrawsock fin\n");
- // if ((sock_eth2 = initrawsock("eth2", 1, 0)) < 0){ 
- //   //fprintf(stderr, "InitRawSocket:error:%s\n", argv[1]);
- //   fprintf(stderr, "InitRawSocket:error:eth3\n");
- //   exit(1);
- // }
+//	printf("initrawsock\n");
+//  if ((sock = initrawsock(argv[1], 1, 0)) < 0){ 
+//  //if ((sock_eth3 = initrawsock("eth3", 1, 0)) < 0){ 
+//    fprintf(stderr, "InitRawSocket:error:%s\n", argv[1]);
+//    //fprintf(stderr, "InitRawSocket:error:eth3\n");
+//    exit(1);
+//  }
+//	printf("initrawsock fin\n");
+// // if ((sock_eth2 = initrawsock("eth2", 1, 0)) < 0){ 
+// //   //fprintf(stderr, "InitRawSocket:error:%s\n", argv[1]);
+// //   fprintf(stderr, "InitRawSocket:error:eth3\n");
+// //   exit(1);
+// // }
 
 	//struct ip_packet packet;
 	//write(sock, icmp_packet, strlen(icmp_packet));
@@ -140,27 +149,15 @@ int main(int argc, char **argv){
 	p->iphdr.src_addr = htonl(0x0a000003);
 	p->iphdr.dest_addr = htonl(0x0a000005);
 
-	//p->iphdr.type_of_service = 0x00;
-	//p->iphdr.total_len = 0x003c;
-	//p->iphdr.id = 0x209a;
-	//p->iphdr.frag = 0x4000;
-	//p->iphdr.ttl = 0x40;
-	//p->iphdr.proto = 0x01;
-	//p->iphdr.check = 0x0000;
-	//p->iphdr.src_addr = 0x0a000003;
-	//p->iphdr.dest_addr = 0x0a000005;
-
 	int l;
 	for (l = 0; l < 26; l++){
 		p->pate[l] = 0x00;
 	}
 
-	//p.ethhdr = &ethhdr;
-	//p.iphdr = &iphdr;
 
 
-	int n;
-#if 1
+	//int n;
+#if 0
 	printf("write\n");
 	if ((n = write(sock, (u_char *)p, 60)) <= 0){
 	//if ((n = write(sock_eth2, buf, size)) <= 0){
@@ -176,13 +173,15 @@ int main(int argc, char **argv){
 	fflush(fp);
 	close(fp);
 
-#else
+//#else
 	if ((n = sendto(sock, (char *)icmp_packet, strlen(icmp_packet), 0, (struct sockaddr *)&to, sizeof(to))) <= 0){
 		fprintf(stdout, "can not send packet\n");
 		exit(1);
 	}
 #endif
 	
-	close(sock);
+	//close(sock);
 	//close(sock_eth3);
+
+	return 0;
 }
