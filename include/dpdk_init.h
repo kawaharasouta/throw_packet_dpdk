@@ -66,8 +66,8 @@ port_init(uint16_t port, struct rte_mempool *mbuf_pool)
   return 0;
 }
 
-void dpdk_init(int argc, char **argv){
-  struct rte_mempool *mbuf_pool;
+void dpdk_init(int argc, char **argv, struct rte_mempool *mbuf_pool){
+  //struct rte_mempool *mbuf_pool;
   int ret;
   unsigned nb_ports;
   uint16_t portid;
