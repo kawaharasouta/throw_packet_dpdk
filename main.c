@@ -127,13 +127,14 @@ void dpdk_init(int argc, char **argv){
 
 void hexdump(u_int16_t *buf, int size){
   int i;
+	printf("***** hexdump *****\n");
   for (i = 0;i < size; i++){
     fprintf(stdout, "%04x ", *(buf + i));
     if ((i + 1) % 8 == 0){ 
       fprintf(stdout, "\n");
     }   
   }
-  fprintf(stdout, "\nfin\n");
+  fprintf(stdout, "\n***** hexdump fin *****\n");
 }
 
 void print_mbuf(const struct rte_mbuf *bufs){
@@ -321,14 +322,17 @@ int main(int argc, char **argv){
 	printf("rte_pktmbuf_alloc\n");
 	bufs[0] = rte_pktmbuf_alloc(mbuf_pool);
 	print_mbuf(bufs[0]);
-	//bufs[0]->pkt_len = 60;
-	//bufs[0]->data_len = 60;
+	bufs[0]->pkt_len = 60;
+	bufs[0]->data_len = 60;
 	//print_mbuf(bufs[0]);
 
 	printf("strncpy\n");
-	uint8_t *p = rte_pktmbuf_append(bufs[0], length);
-	//uint8_t *p = rte_pktmbuf_mtod(bufs[0], uint8_t*);
-	strncpy(p, buffer, length);
+	//uint8_t *p = rte_pktmbuf_append(bufs[0], length);
+	//uint8_t *p = rte_pktmbuf_prepend(bufs[0], length);
+	uint8_t *p = rte_pktmbuf_mtod(bufs[0], uint8_t*);
+
+	//if (p == pp) printf("p <=> pp\n");
+	memcpy(p, buffer, length);
 	
 	/******/
 	//struct ether_arp *pp = p + sizeof(struct ether_header);
@@ -358,7 +362,7 @@ int main(int argc, char **argv){
 	
 	//printf("mbuf test\n");
 	//uint8_t *p = rte_pktmbuf_mtod(bufs[0], uint8_t*);
-	//hexdump(buffer, length);
+	hexdump(buffer, length);
 	printf("*****\n");
 	hexdump(p, length);
 
@@ -367,6 +371,11 @@ int main(int argc, char **argv){
 	rte_eth_tx_burst(port, 0, bufs, 1);
 
 	printf("fin\n");
+
+
+	FILE *fp;
+	fp = fopen("mbuf_dump.txt", "w");
+	rte_pktmbuf_dump(fp, bufs[0], bufs[0]->buf_len);
 
 
 	//int n;
